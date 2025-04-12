@@ -1,18 +1,13 @@
 /* --- Base Styles & Variables --- */
 :root {
-  --bg-gradient-start: #2c3e50; /* Dark Slate Blue */
-  --bg-gradient-end: #1a252f; /* Darker Blue/Grey */
-  --card-bg: rgba(44, 62, 80, 0.5); /* Semi-transparent card bg */
-  --card-bg-glass: rgba(
-    52,
-    73,
-    94,
-    0.6
-  ); /* Slightly more opaque for glass effect */
-  --text-primary: #ecf0f1; /* Light Grey/White */
-  --text-secondary: #bdc3c7; /* Muted Grey */
-  --highlight-primary: #3498db; /* Blue */
-  --highlight-secondary: #8e44ad; /* Purple */
+  --bg-gradient-start: #2c3e50;
+  --bg-gradient-end: #1a252f;
+  --card-bg: rgba(44, 62, 80, 0.5);
+  --card-bg-glass: rgba(52, 73, 94, 0.8); /* Slightly more opaque */
+  --text-primary: #ecf0f1;
+  --text-secondary: #bdc3c7;
+  --highlight-primary: #3498db;
+  --highlight-secondary: #8e44ad;
   --highlight-gradient: linear-gradient(
     135deg,
     var(--highlight-primary),
@@ -20,16 +15,19 @@
   );
   --control-bg: rgba(0, 0, 0, 0.15);
   --control-hover-bg: rgba(0, 0, 0, 0.25);
-  --control-active-bg: rgba(0, 0, 0, 0.1); /* For inset effect */
+  --control-active-bg: rgba(0, 0, 0, 0.1);
   --progress-bg: rgba(0, 0, 0, 0.2);
   --progress-fill: var(--highlight-gradient);
-  --shadow-light: rgba(255, 255, 255, 0.05); /* Very subtle light edge */
-  --shadow-dark: rgba(0, 0, 0, 0.4); /* Deeper dark shadow */
+  --shadow-light: rgba(255, 255, 255, 0.05);
+  --shadow-dark: rgba(0, 0, 0, 0.4);
   --border-color: rgba(255, 255, 255, 0.1);
-  --border-radius: 18px; /* Slightly more rounded */
+  --lyrics-panel-bg: rgba(44, 62, 80, 0.92); /* Slightly more opaque */
+  --lyrics-text: #e0e0e0; /* Slightly dimmer white for lyrics text */
+  --border-radius: 18px;
   --font-family: "Poppins", sans-serif;
 }
 
+/* --- Global Reset & Body --- */
 * {
   margin: 0;
   padding: 0;
@@ -52,30 +50,60 @@ body {
   overflow-x: hidden;
 }
 
-/* --- Main Container --- */
+/* --- Loading Overlay --- */
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.loading-overlay.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 5px solid rgba(255, 255, 255, 0.3);
+  border-top-color: var(--highlight-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* --- Main Music Container --- */
 .music-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 35px; /* Increased gap */
+  gap: 35px;
   width: 100%;
-  max-width: 420px; /* Consistent width for player & playlist */
+  max-width: 420px;
 }
 
 /* --- Player Card --- */
 .player-card {
   background: var(--card-bg-glass);
-  backdrop-filter: blur(25px);
-  -webkit-backdrop-filter: blur(25px);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border-radius: var(--border-radius);
-  padding: 30px 35px; /* More padding */
-  /* Neumorphic Shadow */
+  padding: 30px 35px;
   box-shadow: 8px 8px 20px var(--shadow-dark),
     -8px -8px 20px var(--shadow-light);
   border: 1px solid var(--border-color);
   width: 100%;
-  position: relative;
-  overflow: hidden;
+  position: relative; /* Needed for absolute positioning */
+  overflow: hidden; /* Clip the lyrics panel when hidden */
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
@@ -86,19 +114,45 @@ body {
   text-align: center;
 }
 
+/* --- Button to OPEN Lyrics --- */
+.lyrics-toggle-btn {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease-out;
+  z-index: 5; /* Sits below the lyrics panel */
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3),
+    -2px -2px 5px rgba(255, 255, 255, 0.05);
+}
+.lyrics-toggle-btn:hover {
+  color: var(--text-primary);
+  background: var(--control-hover-bg);
+  transform: scale(1.1);
+}
+
 /* --- Album Art --- */
 .album-art-container {
-  width: 75%; /* Adjust as needed */
-  max-width: 220px;
+  width: 65%;
+  max-width: 200px;
   aspect-ratio: 1 / 1;
-  border-radius: var(--border-radius); /* Match card radius */
-  margin-bottom: 30px; /* Increased space */
+  border-radius: 15px;
+  margin-bottom: 25px;
   position: relative;
-  /* Inner shadow for recessed look */
-  box-shadow: inset 4px 4px 10px rgba(0, 0, 0, 0.3),
-    inset -2px -2px 10px rgba(255, 255, 255, 0.03);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
   overflow: hidden;
-  background-color: rgba(0, 0, 0, 0.2); /* Fallback bg */
+  background-color: rgba(0, 0, 0, 0.2);
+  z-index: 1; /* Below toggle button */
 }
 
 #album-art {
@@ -106,47 +160,133 @@ body {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: var(--border-radius);
-  opacity: 0; /* Hidden initially, fade in via JS */
+  border-radius: inherit;
+  opacity: 0;
   transition: opacity 0.5s ease-in-out;
 }
-
 #album-art.loaded {
-  opacity: 1; /* Fade in when loaded */
+  opacity: 1;
 }
 
 .art-placeholder {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  inset: 0;
   display: flex;
   justify-content: center;
   align-items: center;
   font-size: 3rem;
   color: rgba(255, 255, 255, 0.2);
-  z-index: 1; /* Above the hidden image initially */
+  z-index: 1;
   transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+#album-art.loaded + .art-placeholder {
+  opacity: 0;
 }
 
-#album-art.loaded + .art-placeholder {
-  opacity: 0; /* Hide placeholder when image is loaded */
-  pointer-events: none;
+/* --- Lyrics Panel Overlay --- */
+.lyrics-panel {
+  position: absolute;
+  inset: 0; /* Cover the entire card */
+  background: var(--lyrics-panel-bg);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: var(--border-radius); /* Match card */
+  z-index: 20; /* Above all other player content */
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  pointer-events: none; /* Hidden and non-interactive */
+  transform: translateY(20px) scale(0.98); /* Start slightly down */
+  transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+/* Class added by JS to show the panel */
+.player-card.lyrics-visible .lyrics-panel {
+  opacity: 1;
+  pointer-events: auto; /* Make interactive */
+  transform: translateY(0) scale(1); /* Animate into place */
+}
+
+.lyrics-panel-header {
+  display: flex;
+  justify-content: center; /* Center title */
+  align-items: center;
+  position: relative; /* Needed for close button positioning */
+  padding-bottom: 10px;
+  margin-bottom: 15px;
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+.lyrics-panel-header h4 {
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: var(--text-primary);
+  margin: 0;
+  line-height: 1;
+  text-align: center;
+}
+
+/* Button to CLOSE Lyrics (Inside Panel Header) */
+.lyrics-close-btn {
+  position: absolute; /* Position relative to the header */
+  top: 50%;
+  right: 0px; /* Align to the right edge of the header padding */
+  transform: translateY(-50%); /* Center vertically */
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.2rem; /* Larger icon */
+  cursor: pointer;
+  padding: 5px; /* Clickable area */
+  line-height: 1;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+.lyrics-close-btn:hover {
+  color: var(--text-primary);
+  transform: translateY(-50%) scale(1.1); /* Slight scale on hover */
+}
+
+/* Lyrics Content Area */
+.lyrics-content-panel {
+  flex-grow: 1; /* Take available space */
+  overflow-y: auto; /* Enable scrolling */
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: var(--lyrics-text);
+  text-align: center;
+  white-space: pre-wrap; /* Respect line breaks */
+  scrollbar-width: thin;
+  scrollbar-color: var(--control-hover-bg) transparent;
+  padding: 0 5px; /* Prevent text touching scrollbar */
+}
+.lyrics-content-panel::-webkit-scrollbar {
+  width: 6px;
+}
+.lyrics-content-panel::-webkit-scrollbar-track {
+  background: transparent;
+}
+.lyrics-content-panel::-webkit-scrollbar-thumb {
+  background-color: var(--control-hover-bg);
+  border-radius: 10px;
+}
+.lyrics-content-panel::-webkit-scrollbar-thumb:hover {
+  background-color: var(--text-secondary);
 }
 
 /* --- Track Info --- */
 .track-info {
-  margin-bottom: 25px; /* Increased space */
+  margin-bottom: 20px;
+  position: relative;
+  z-index: 1; /* Keep above shadows */
 }
-
 #track-title {
-  font-size: 1.5rem; /* Larger Title */
+  font-size: 1.5rem;
   font-weight: 600;
   margin-bottom: 6px;
   color: var(--text-primary);
 }
-
 #track-artist {
   font-size: 0.9rem;
   font-weight: 400;
@@ -156,36 +296,33 @@ body {
 /* --- Progress Bar --- */
 .progress-container {
   width: 100%;
-  margin-bottom: 25px; /* Increased space */
+  margin-bottom: 25px;
   cursor: pointer;
+  position: relative;
+  z-index: 1;
 }
-
-/* Time display ABOVE progress bar */
 .time-display {
   display: flex;
   justify-content: space-between;
   font-size: 0.75rem;
   color: var(--text-secondary);
-  margin-bottom: 8px; /* Space between time and bar */
-  padding: 0 5px; /* Align slightly inwards */
+  margin-bottom: 8px;
+  padding: 0 5px;
 }
-
 .progress-bar-wrapper {
   background: var(--progress-bg);
-  height: 6px; /* Thinner bar */
+  height: 6px;
   border-radius: 3px;
   width: 100%;
   position: relative;
   overflow: hidden;
-  box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.3); /* Subtle inset */
+  box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.3);
 }
-
 .progress-bar {
   height: 100%;
   width: 100%;
   position: relative;
 }
-
 .progress {
   background: var(--progress-fill);
   height: 100%;
@@ -195,25 +332,25 @@ body {
   top: 0;
   left: 0;
   transition: width 0.1s linear;
-  box-shadow: 0 0 10px rgba(52, 152, 219, 0.5),
-    /* Glow effect */ 0 0 5px rgba(142, 68, 173, 0.5);
+  box-shadow: 0 0 10px rgba(52, 152, 219, 0.5), 0 0 5px rgba(142, 68, 173, 0.5);
 }
 
 /* --- Controls --- */
 .controls {
   display: flex;
-  justify-content: space-between; /* Space out buttons */
+  justify-content: space-between;
   align-items: center;
-  gap: 15px; /* Adjust gap */
-  margin-bottom: 30px; /* Increased space */
+  gap: 15px;
+  margin-bottom: 30px;
   width: 100%;
-  max-width: 300px; /* Limit control width */
+  max-width: 300px;
+  position: relative;
+  z-index: 1;
 }
-
 .control-btn {
   background: var(--control-bg);
-  border: 1px solid rgba(255, 255, 255, 0.05); /* Subtle border */
-  color: var(--text-secondary); /* Muted color */
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  color: var(--text-secondary);
   border-radius: 50%;
   width: 48px;
   height: 48px;
@@ -223,69 +360,58 @@ body {
   cursor: pointer;
   font-size: 1rem;
   transition: all 0.2s ease-out;
-  /* Neumorphic Outset Shadow */
   box-shadow: 5px 5px 10px var(--shadow-dark),
     -5px -5px 10px var(--shadow-light);
-  position: relative; /* Needed for pseudo elements */
+  position: relative;
 }
-
 .control-btn:hover {
-  color: var(--text-primary); /* Highlight on hover */
+  color: var(--text-primary);
   background: var(--control-hover-bg);
-  transform: translateY(-2px); /* Slight lift */
+  transform: translateY(-2px);
   box-shadow: 7px 7px 15px var(--shadow-dark),
     -7px -7px 15px var(--shadow-light);
 }
-
 .control-btn:active {
-  transform: translateY(0px) scale(0.95); /* Press down effect */
-  /* Neumorphic Inset Shadow */
+  transform: translateY(0px) scale(0.95);
   box-shadow: inset 3px 3px 7px var(--shadow-dark),
     inset -3px -3px 7px var(--shadow-light);
   background: var(--control-active-bg);
-  color: var(--highlight-primary); /* Indicate active press */
+  color: var(--highlight-primary);
 }
-
 .main-btn {
-  width: 65px; /* Larger */
+  width: 65px;
   height: 65px;
   font-size: 1.6rem;
-  background: var(--highlight-gradient); /* Gradient background */
+  background: var(--highlight-gradient);
   color: white;
   border: none;
   box-shadow: 6px 6px 15px rgba(0, 0, 0, 0.3),
-    /* Slightly adjusted shadow */ -6px -6px 15px rgba(255, 255, 255, 0.08);
+    -6px -6px 15px rgba(255, 255, 255, 0.08);
 }
-
 .main-btn:hover {
   filter: brightness(1.15);
   color: white;
   box-shadow: 8px 8px 18px rgba(0, 0, 0, 0.35),
     -8px -8px 18px rgba(255, 255, 255, 0.08);
 }
-
 .main-btn:active {
   filter: brightness(0.9);
   box-shadow: inset 4px 4px 8px rgba(0, 0, 0, 0.4),
-    /* Stronger inset */ inset -4px -4px 8px rgba(255, 255, 255, 0.1);
+    inset -4px -4px 8px rgba(255, 255, 255, 0.1);
 }
-
-/* Active states for shuffle/repeat */
 .control-btn.active {
-  /* Inset look for active state */
+  /* For Shuffle/Repeat Active State */
   box-shadow: inset 3px 3px 7px var(--shadow-dark),
     inset -3px -3px 7px var(--shadow-light);
   background: var(--control-active-bg);
-  color: var(--highlight-primary); /* Active color */
+  color: var(--highlight-primary);
 }
 .control-btn.active:hover {
-  /* Adjust hover for active */
-  transform: translateY(0); /* No lift when active */
+  transform: translateY(0);
   filter: brightness(1.1);
 }
-
-/* Repeat '1' indicator using pseudo-element */
 .control-btn.repeat-mode-one::after {
+  /* Repeat '1' indicator */
   content: "1";
   position: absolute;
   top: 2px;
@@ -308,61 +434,55 @@ body {
   align-items: center;
   width: 90%;
   max-width: 280px;
-  gap: 12px; /* Increased gap */
+  gap: 12px;
+  position: relative;
+  z-index: 1;
 }
-
 .volume-icon {
   color: var(--text-secondary);
   font-size: 0.9rem;
   transition: color 0.2s ease;
+  cursor: pointer;
 }
 .volume-icon:hover {
   color: var(--text-primary);
 }
-
 .volume-slider-wrapper {
   flex-grow: 1;
   position: relative;
-  height: 5px; /* Thinner volume slider */
+  height: 5px;
   background-color: var(--progress-bg);
   border-radius: 2.5px;
   cursor: pointer;
   box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.3);
 }
-
 #volume-slider {
   appearance: none;
   -webkit-appearance: none;
   width: 100%;
   height: 100%;
-  background: transparent; /* Make default track invisible */
+  background: transparent;
   cursor: pointer;
   position: relative;
   z-index: 2;
-  margin: 0; /* Reset margin */
-  padding: 0; /* Reset padding */
+  margin: 0;
+  padding: 0;
 }
-
-/* Custom Volume Track (Filled part) */
 .volume-progress {
   position: absolute;
   top: 0;
   left: 0;
   height: 100%;
-  width: 80%; /* Default volume, updated by JS */
-  background: var(--text-secondary); /* Muted color for volume */
+  width: 80%;
+  background: var(--text-secondary);
   border-radius: 2.5px;
   pointer-events: none;
   z-index: 1;
   transition: width 0.1s linear, background-color 0.2s ease;
 }
-
-/* Change volume progress color on interaction */
 .volume-slider-wrapper:hover .volume-progress {
   background: var(--text-primary);
 }
-
-/* Styling the Volume Thumb */
 #volume-slider::-webkit-slider-thumb {
   appearance: none;
   -webkit-appearance: none;
@@ -371,12 +491,11 @@ body {
   background: var(--text-primary);
   border-radius: 50%;
   cursor: pointer;
-  margin-top: -4.5px; /* Center vertically */
+  margin-top: -4.5px;
   box-shadow: 0 0 8px rgba(0, 0, 0, 0.4);
   transition: background-color 0.2s ease;
-  border: none; /* Ensure no default border */
+  border: none;
 }
-
 #volume-slider::-moz-range-thumb {
   width: 14px;
   height: 14px;
@@ -397,7 +516,7 @@ body {
 /* --- Playlist --- */
 .playlist-container {
   width: 100%;
-  background: var(--card-bg); /* Less blur/opacity than player */
+  background: var(--card-bg);
   backdrop-filter: blur(15px);
   -webkit-backdrop-filter: blur(15px);
   border-radius: var(--border-radius);
@@ -407,7 +526,6 @@ body {
   border: 1px solid var(--border-color);
   max-height: 280px;
   overflow-y: auto;
-  /* Custom Scrollbar */
   scrollbar-width: thin;
   scrollbar-color: var(--control-hover-bg) transparent;
 }
@@ -427,7 +545,6 @@ body {
 .playlist-container::-webkit-scrollbar-thumb:hover {
   background-color: var(--text-secondary);
 }
-
 .playlist-container h3 {
   font-weight: 600;
   margin-bottom: 15px;
@@ -435,64 +552,55 @@ body {
   color: var(--text-secondary);
   font-size: 1rem;
 }
-
 #playlist {
   list-style: none;
 }
-
 #playlist li {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 10px; /* More padding */
+  padding: 12px 10px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   cursor: pointer;
-  transition: background-color 0.2s ease, border-left 0.2s ease;
+  transition: background-color 0.2s ease, border-left 0.2s ease, color 0.2s ease;
   border-radius: 8px;
-  margin-bottom: 5px; /* Space between items */
-  border-left: 3px solid transparent; /* For active indicator */
-  overflow-x:auto;
+  margin-bottom: 5px;
+  border-left: 3px solid transparent;
+  overflow-x: hidden;
 }
-
 #playlist li:last-child {
   border-bottom: none;
   margin-bottom: 0;
 }
-
 #playlist li:hover {
   background-color: var(--control-bg);
 }
-
 #playlist li.playing {
   background-color: var(--control-hover-bg);
   font-weight: 600;
   color: var(--text-primary);
-  border-left: 3px solid var(--highlight-primary); /* Active indicator */
-  overflow-x: auto;
+  border-left: 3px solid var(--highlight-primary);
 }
 #playlist li.playing .playlist-artist {
-  color: var(--highlight-primary); /* Highlight artist */
+  color: var(--highlight-primary);
 }
-
 .playlist-title {
   font-size: 0.95rem;
-  flex-grow: 1; /* Allow title to take available space */
-  margin-right: 10px; /* Ensure space before artist */
+  flex-grow: 1;
+  margin-right: 10px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
 .playlist-artist {
   font-size: 0.8rem;
   color: var(--text-secondary);
-  white-space: nowrap; /* Prevent wrapping */
-  flex-shrink: 0; /* Don't let artist name shrink */
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: color 0.2s ease;
 }
 
 /* --- Responsiveness --- */
-
-/* Smaller devices (Tablets / Large Phones) */
 @media (max-width: 768px) {
   .music-container {
     max-width: 400px;
@@ -502,7 +610,7 @@ body {
     padding: 25px 30px;
   }
   .album-art-container {
-    width: 70%;
+    width: 60%;
   }
   #track-title {
     font-size: 1.4rem;
@@ -528,9 +636,27 @@ body {
     padding: 15px 20px;
     max-height: 250px;
   }
+  .lyrics-content-panel {
+    font-size: 0.85rem;
+  }
+  .lyrics-toggle-btn {
+    width: 34px;
+    height: 34px;
+    font-size: 0.8rem;
+    top: 12px;
+    right: 12px;
+  }
+  .lyrics-panel {
+    padding: 15px;
+  } /* Adjust padding */
+  .lyrics-panel-header h4 {
+    font-size: 1rem;
+  }
+  .lyrics-close-btn {
+    font-size: 1.15rem;
+  }
 }
 
-/* Small devices (Phones) */
 @media (max-width: 480px) {
   body {
     padding: 15px;
@@ -544,8 +670,8 @@ body {
     border-radius: 15px;
   }
   .album-art-container {
-    width: 65%;
-    max-width: 180px;
+    width: 55%;
+    max-width: 160px;
     margin-bottom: 20px;
   }
   #track-title {
@@ -590,4 +716,28 @@ body {
   .playlist-artist {
     font-size: 0.75rem;
   }
+  .lyrics-content-panel {
+    font-size: 0.8rem;
+    line-height: 1.6;
+  }
+  .lyrics-toggle-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 0.75rem;
+    top: 10px;
+    right: 10px;
+  }
+  .lyrics-panel {
+    padding: 15px;
+  } /* Adjust padding */
+  .lyrics-panel-header {
+    margin-bottom: 10px;
+  }
+  .lyrics-panel-header h4 {
+    font-size: 1rem;
+  }
+  .lyrics-close-btn {
+    font-size: 1.1rem;
+    right: -5px;
+  } /* Adjust position slightly */
 }
