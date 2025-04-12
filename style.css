@@ -451,6 +451,7 @@ body {
   border-radius: 8px;
   margin-bottom: 5px; /* Space between items */
   border-left: 3px solid transparent; /* For active indicator */
+  overflow-x:auto;
 }
 
 #playlist li:last-child {
